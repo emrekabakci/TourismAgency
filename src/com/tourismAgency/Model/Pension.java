@@ -2,6 +2,7 @@ package com.tourismAgency.Model;
 
 import com.tourismAgency.Helper.DBConnector;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -44,9 +45,9 @@ public class Pension {
         this.type = type;
     }
 
-    public static ArrayList<Pension> getPension() {
+    public static ArrayList<Pension> getPension(String hotelID) {
         ArrayList<Pension> pensionList = new ArrayList<>();
-        String query = "SELECT * FROM hotel_pension";
+        String query = "SELECT * FROM hotel_pension WHERE hotel_id =" + hotelID;
         Pension obj;
         try {
             Statement statement = DBConnector.getInstances().createStatement();
@@ -64,4 +65,15 @@ public class Pension {
         return pensionList;
     }
 
+    public static boolean addPension(int HotelID, String pensionType){
+        String query = "INSERT INTO hotel_pension (hotel_id, pension_type) VALUES (?,?)";
+        try {
+            PreparedStatement preparedStatement = DBConnector.getInstances().prepareStatement(query);
+            preparedStatement.setInt(1, HotelID);
+            preparedStatement.setString(2, pensionType);
+            return preparedStatement.executeUpdate() !=-1;
+        }catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

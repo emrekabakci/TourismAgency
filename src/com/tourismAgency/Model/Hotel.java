@@ -248,4 +248,5 @@ public class Hotel {
             throw new RuntimeException(e);
         }
     }
+
 }
