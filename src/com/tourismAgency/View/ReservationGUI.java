@@ -12,6 +12,9 @@ import java.util.TimerTask;
 
 import static com.tourismAgency.Model.Hotel.getHotel;
 import static com.tourismAgency.Model.Reservation.addReservation;
+import static com.tourismAgency.Model.Reservation.updateReservation;
+import static com.tourismAgency.Model.Room.decreaseStock;
+import static com.tourismAgency.Model.Room.increaseStock;
 
 public class ReservationGUI extends JFrame {
     private JPanel wrapper;
@@ -40,12 +43,13 @@ public class ReservationGUI extends JFrame {
     public JRadioButton rBtn_projection;
     private JPanel pnl_customerInfo;
     public JTextField fld_totalCustomer;
-    private JTextField fld_customerName;
-    private JTextField fld_customerID;
-    private JTextField fld_customerMail;
-    private JTextField fld_customerPhone;
-    private JButton btn_saveReservation;
+    public JTextField fld_customerName;
+    public JTextField fld_customerID;
+    public JTextField fld_customerMail;
+    public JTextField fld_customerPhone;
+    public JButton btn_saveReservation;
     public String roomId;
+    public String id;
 
     public ReservationGUI(EmployeeGUI employeeGUI) {
 
@@ -56,8 +60,11 @@ public class ReservationGUI extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocation(Helper.setCenter("x", getSize()), Helper.setCenter("y", getSize()));
 
-        Object[] col_reservation_list = {"Id","Oda Id", "Giriş Tarihi", "Çıkış Tarihi", "Toplam Tutar",
-                "Misafir Sayısı", "Misafir Adı", "Misafir Kimlik No" ,"Mail", "Telefon"};
+        Object[] col_reservation_list = {"Id", "Oda Id", "Giriş Tarihi", "Çıkış Tarihi", "Toplam Tutar",
+                "Misafir Sayısı", "Misafir Adı", "Misafir Kimlik No", "Mail", "Telefon"};
+
+        Object[] col_room_list = {"id", "Otel Adı", "Pansiyon", "Stok", "Yetişkin Fiyat", "Çocuk Fiyat", "Yatak Kapasitesi", "m2",
+                "Tv", "Mini Bar", "Konsol", "Kasa", "Projeksiyon"};
 
         Timer timer = new Timer();
         TimerTask task = new TimerTask() {
@@ -88,15 +95,24 @@ public class ReservationGUI extends JFrame {
                 }
             }
         };
-        timer.schedule(task,100);
+        timer.schedule(task, 100);
         btn_saveReservation.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                addReservation(roomId,fld_seasonStart.getText(),fld_seasonFinish.getText(),fld_totalPrice.getText(),
-                        fld_totalCustomer.getText(),fld_customerName.getText(),fld_customerID.getText(),
-                        fld_customerMail.getText(), fld_customerPhone.getText());
-                employeeGUI.reservationLoader(col_reservation_list);
-                ReservationGUI.super.dispose();
+                if (btn_saveReservation.getText().equals("Rezervasyon Güncelle")) {
+                    updateReservation(id, fld_totalCustomer.getText(), fld_customerName.getText(), fld_customerID.getText(),
+                            fld_customerMail.getText(), fld_customerPhone.getText());
+                    employeeGUI.reservationLoader(col_reservation_list);
+                    ReservationGUI.super.dispose();
+                } else {
+                    addReservation(roomId, fld_seasonStart.getText(), fld_seasonFinish.getText(), fld_totalPrice.getText(),
+                            fld_totalCustomer.getText(), fld_customerName.getText(), fld_customerID.getText(),
+                            fld_customerMail.getText(), fld_customerPhone.getText());
+                    decreaseStock(roomId);
+                    employeeGUI.reservationLoader(col_reservation_list);
+                    employeeGUI.roomLoader(col_room_list);
+                    ReservationGUI.super.dispose();
+                }
             }
         });
     }

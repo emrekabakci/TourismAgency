@@ -20,6 +20,7 @@ import static com.tourismAgency.Model.Admin.getList;
 import static com.tourismAgency.Model.Hotel.deleteHotelByID;
 import static com.tourismAgency.Model.Hotel.getHotels;
 import static com.tourismAgency.Model.Pension.getPension;
+import static com.tourismAgency.Model.Reservation.deleteReservation;
 import static com.tourismAgency.Model.Reservation.getReservations;
 import static com.tourismAgency.Model.Room.*;
 import static com.tourismAgency.Model.Season.getSeason;
@@ -171,63 +172,95 @@ public class EmployeeGUI extends JFrame {
         room_action_menu.add("Rezervasyon Oluştur").addActionListener(e -> {
             if (!fld_adult.getText().trim().isEmpty() && !fld_child.getText().trim().isEmpty() &&
                     !fld_seasonStart.getText().trim().isEmpty() && !fld_seasonFinish.getText().trim().isEmpty()) {
-                String firstDate = fld_seasonStart.getText();
-                String finishDate = fld_seasonFinish.getText();
-                Date date1;
-                Date date2;
-                Date date3;
-                Date date4;
-                SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd");
-
-
-                try {
-                    date1 = formatter.parse(firstDate);
-                    date2 = formatter.parse(finishDate);
-                    date3 = formatter.parse(getCheckIn());
-                    date4 = formatter.parse(getCheckout());
-                } catch (ParseException ex) {
-                    throw new RuntimeException(ex);
-                }
-
-                if (date1.getTime() >= date3.getTime() && date2.getTime() <= date4.getTime()) {
-                    long differenceInMillis = Math.abs(date2.getTime() - date1.getTime());
-                    long difference = TimeUnit.MILLISECONDS.toDays(differenceInMillis);
-                    int param1 = Integer.parseInt(fld_child.getText());
-                    int param2 = Integer.parseInt(fld_adult.getText());
-                    int totalCustomer = param1 + param2;
-                    int childPrice = Integer.parseInt(mdl_room_list.getValueAt(selectedRoomRow, 5).toString()) * param1;
-                    int adultPrice = Integer.parseInt(mdl_room_list.getValueAt(selectedRoomRow, 4).toString()) * param2;
-                    long result = (childPrice + adultPrice) * difference;
-                    ReservationGUI reservationGUI = new ReservationGUI(EmployeeGUI.this);
-                    reservationGUI.fld_hotelName.setText(mdl_room_list.getValueAt(selectedRoomRow, 1).toString());
-                    reservationGUI.roomId = mdl_room_list.getValueAt(selectedRoomRow, 0).toString();
-                    reservationGUI.fld_totalPrice.setText(String.valueOf(result));
-                    reservationGUI.fld_totalCustomer.setText(String.valueOf(totalCustomer));
-                    reservationGUI.fld_pensionType.setText(mdl_room_list.getValueAt(selectedRoomRow, 2).toString());
-                    reservationGUI.fld_seasonStart.setText(fld_seasonStart.getText());
-                    reservationGUI.fld_seasonFinish.setText(fld_seasonFinish.getText());
-                    reservationGUI.fld_bedCapacity.setText(mdl_room_list.getValueAt(selectedRoomRow, 6).toString());
-                    reservationGUI.fld_m2.setText(mdl_room_list.getValueAt(selectedRoomRow, 7).toString());
-                    if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 8).toString())) {
-                        reservationGUI.rBtn_tv.setSelected(true);
-                    }
-                    if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 9).toString())) {
-                        reservationGUI.rBtn_minibar.setSelected(true);
-                    }
-                    if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 10).toString())) {
-                        reservationGUI.rBtn_console.setSelected(true);
-                    }
-                    if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 11).toString())) {
-                        reservationGUI.rBtn_safe.setSelected(true);
-                    }
-                    if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 12).toString())) {
-                        reservationGUI.rBtn_projection.setSelected(true);
-                    }
+                if (Integer.parseInt(mdl_room_list.getValueAt(selectedRoomRow, 3).toString()) <= 0) {
+                    Helper.showMsg("Yeterli stok bulunmamakta");
                 } else {
-                    Helper.showMsg("error");
+                    String firstDate = fld_seasonStart.getText();
+                    String finishDate = fld_seasonFinish.getText();
+                    Date date1;
+                    Date date2;
+                    Date date3;
+                    Date date4;
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd");
+
+
+                    try {
+                        date1 = formatter.parse(firstDate);
+                        date2 = formatter.parse(finishDate);
+                        date3 = formatter.parse(getCheckIn());
+                        date4 = formatter.parse(getCheckout());
+                    } catch (ParseException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                    if (date1.getTime() >= date3.getTime() && date2.getTime() <= date4.getTime()) {
+                        long differenceInMillis = Math.abs(date2.getTime() - date1.getTime());
+                        long difference = TimeUnit.MILLISECONDS.toDays(differenceInMillis);
+                        int param1 = Integer.parseInt(fld_child.getText());
+                        int param2 = Integer.parseInt(fld_adult.getText());
+                        int totalCustomer = param1 + param2;
+                        int childPrice = Integer.parseInt(mdl_room_list.getValueAt(selectedRoomRow, 5).toString()) * param1;
+                        int adultPrice = Integer.parseInt(mdl_room_list.getValueAt(selectedRoomRow, 4).toString()) * param2;
+                        long result = (childPrice + adultPrice) * difference;
+                        ReservationGUI reservationGUI = new ReservationGUI(EmployeeGUI.this);
+                        reservationGUI.fld_hotelName.setText(mdl_room_list.getValueAt(selectedRoomRow, 1).toString());
+                        reservationGUI.roomId = mdl_room_list.getValueAt(selectedRoomRow, 0).toString();
+                        reservationGUI.fld_totalPrice.setText(String.valueOf(result));
+                        reservationGUI.fld_totalCustomer.setText(String.valueOf(totalCustomer));
+                        reservationGUI.fld_pensionType.setText(mdl_room_list.getValueAt(selectedRoomRow, 2).toString());
+                        reservationGUI.fld_seasonStart.setText(fld_seasonStart.getText());
+                        reservationGUI.fld_seasonFinish.setText(fld_seasonFinish.getText());
+                        reservationGUI.fld_bedCapacity.setText(mdl_room_list.getValueAt(selectedRoomRow, 6).toString());
+                        reservationGUI.fld_m2.setText(mdl_room_list.getValueAt(selectedRoomRow, 7).toString());
+                        if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 8).toString())) {
+                            reservationGUI.rBtn_tv.setSelected(true);
+                        }
+                        if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 9).toString())) {
+                            reservationGUI.rBtn_minibar.setSelected(true);
+                        }
+                        if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 10).toString())) {
+                            reservationGUI.rBtn_console.setSelected(true);
+                        }
+                        if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 11).toString())) {
+                            reservationGUI.rBtn_safe.setSelected(true);
+                        }
+                        if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 12).toString())) {
+                            reservationGUI.rBtn_projection.setSelected(true);
+                        }
+                    } else {
+                        Helper.showMsg("error");
+                    }
                 }
             } else {
                 Helper.showMsg("fill");
+            }
+
+        });
+
+        room_action_menu.add("Oda Sil").addActionListener(e -> {
+            int result = JOptionPane.showConfirmDialog(null,
+                    mdl_reservation_list.getValueAt(selectedReservationRow, 0) +
+                            " id'li odayı" +
+                            " silmek istediğinize" +
+                            " emin misiniz?\n" +
+                            "Oda bilgileri ve odaya kayıtlı olan bütün rezervasyonlar kaybolacak.",
+                    "Emin misin?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (result == JOptionPane.YES_OPTION) {
+                deleteRoom(mdl_room_list.getValueAt(selectedRoomRow, 0).toString());
+                increaseStock(mdl_room_list.getValueAt(selectedRoomRow, 1).toString());
+                roomLoader(col_room_list);
+                reservationLoader(col_reservation_list);
+                JOptionPane.showMessageDialog(
+                        null,
+                        "İşlem başarıyla gerçekleşti",
+                        "Başarılı",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(
+                        null,
+                        "İşlem başarıyla iptal edildi",
+                        "Başarılı",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         });
 
@@ -236,29 +269,66 @@ public class EmployeeGUI extends JFrame {
         reservation_action_menu = new JPopupMenu();
         reservation_action_menu.add("Rezervasyon Güncelle").addActionListener(e -> {
             ReservationGUI reservationGUI = new ReservationGUI(EmployeeGUI.this);
-            reservationGUI.fld_hotelName.setText(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString());
+            reservationGUI.id = mdl_reservation_list.getValueAt(selectedReservationRow, 0).toString();
+            reservationGUI.btn_saveReservation.setText("Rezervasyon Güncelle");
+            reservationGUI.fld_hotelName.setText(String.valueOf(getRoom(mdl_reservation_list.
+                    getValueAt(selectedReservationRow, 1).toString()).getHotelID()));
 
             reservationGUI.fld_pensionType.setText(getRoom(mdl_reservation_list.
-                    getValueAt(selectedReservationRow,1).toString()).getPensionType());
+                    getValueAt(selectedReservationRow, 1).toString()).getPensionType());
 
-            reservationGUI.fld_bedCapacity.setText(getRoom(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString()).toString());
+            reservationGUI.fld_bedCapacity.setText(String.valueOf(getRoom(mdl_reservation_list.getValueAt(selectedReservationRow, 1).toString()).getBedCapacity()));
 
-            reservationGUI.fld_m2.setText(getRoom(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString()).toString());
+            reservationGUI.fld_m2.setText(String.valueOf(getRoom(mdl_reservation_list.getValueAt(selectedReservationRow, 1).toString()).getM2()));
 
-            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString()).isTelevision()){
+            reservationGUI.fld_seasonStart.setText(mdl_reservation_list.getValueAt(selectedReservationRow, 2).toString());
+            reservationGUI.fld_seasonFinish.setText(mdl_reservation_list.getValueAt(selectedReservationRow, 3).toString());
+            reservationGUI.fld_totalPrice.setText(mdl_reservation_list.getValueAt(selectedReservationRow, 4).toString());
+            reservationGUI.fld_totalCustomer.setText(mdl_reservation_list.getValueAt(selectedReservationRow, 5).toString());
+            reservationGUI.fld_customerName.setText(mdl_reservation_list.getValueAt(selectedReservationRow, 6).toString());
+            reservationGUI.fld_customerID.setText(mdl_reservation_list.getValueAt(selectedReservationRow, 7).toString());
+            reservationGUI.fld_customerMail.setText(mdl_reservation_list.getValueAt(selectedReservationRow, 8).toString());
+            reservationGUI.fld_customerPhone.setText(mdl_reservation_list.getValueAt(selectedReservationRow, 9).toString());
+
+
+            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow, 1).toString()).isTelevision()) {
                 reservationGUI.rBtn_tv.setSelected(true);
             }
-            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString()).isMinibar()){
+            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow, 1).toString()).isMinibar()) {
                 reservationGUI.rBtn_minibar.setSelected(true);
             }
-            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString()).isConsole()){
+            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow, 1).toString()).isConsole()) {
                 reservationGUI.rBtn_console.setSelected(true);
             }
-            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString()).isSafe()){
+            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow, 1).toString()).isSafe()) {
                 reservationGUI.rBtn_safe.setSelected(true);
             }
-            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString()).isProjection()){
+            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow, 1).toString()).isProjection()) {
                 reservationGUI.rBtn_projection.setSelected(true);
+            }
+        });
+        reservation_action_menu.add("Rezervasyon Sil").addActionListener(e -> {
+            int result = JOptionPane.showConfirmDialog(null,
+                    mdl_reservation_list.getValueAt(selectedReservationRow, 0) +
+                            " id'li rezervasyonu" +
+                            " silmek istediğinize" +
+                            " emin misiniz?", "Emin misin?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (result == JOptionPane.YES_OPTION) {
+                deleteReservation(mdl_reservation_list.getValueAt(selectedReservationRow, 0).toString());
+                increaseStock(mdl_reservation_list.getValueAt(selectedReservationRow, 1).toString());
+                reservationLoader(col_reservation_list);
+                roomLoader(col_room_list);
+                JOptionPane.showMessageDialog(
+                        null,
+                        "İşlem başarıyla gerçekleşti",
+                        "Başarılı",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(
+                        null,
+                        "İşlem başarıyla iptal edildi",
+                        "Başarılı",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         });
         tbl_reservation.setComponentPopupMenu(reservation_action_menu);
@@ -267,12 +337,18 @@ public class EmployeeGUI extends JFrame {
         action_menu.add("Hotel Sil").addActionListener(e -> {
             int result = JOptionPane.showConfirmDialog(null,
                     mdl_hotel_list.getValueAt(selectedRow, 0) +
-                            " id'li kullanıcıyı" +
+                            " id'li hoteli" +
                             " silmek istediğinize" +
-                            " emin misiniz?", "Emin misin?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                            " emin misiniz?\n" +
+                            "Hotele kayıtlı bütün oda, rezervasyonlar pansiyonlar ve sezonlar kaybedilecek.",
+                    "Emin misin?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 deleteHotelByID(mdl_hotel_list.getValueAt(selectedRow, 0).toString());
                 hotelLoader(col_hotel_list);
+                roomLoader(col_room_list);
+                reservationLoader(col_reservation_list);
+                mdl_pension_list.setRowCount(0);
+                mdl_season_list.setRowCount(0);
                 JOptionPane.showMessageDialog(
                         null,
                         "İşlem başarıyla gerçekleşti",

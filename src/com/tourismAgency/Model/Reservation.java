@@ -3,6 +3,7 @@ package com.tourismAgency.Model;
 import com.tourismAgency.Helper.DBConnector;
 import com.tourismAgency.Helper.Helper;
 
+import javax.swing.*;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -143,6 +144,7 @@ public class Reservation {
         }
         return reservationList;
     }
+
     public static boolean addReservation(String roomId, String seasonStart, String seasonFinish, String totalPrice,
                                          String totalCustomer, String customerName, String customerId, String customerMail, String customerPhone) {
 
@@ -164,6 +166,39 @@ public class Reservation {
             return preparedStatement.executeUpdate() != -1;
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean updateReservation(String id, String totalCustomer, String customerName, String customerId, String customerMail, String customerPhone) {
+
+        String query = "UPDATE reservation SET total_customer=?, customer_name=?, customer_id=?, customer_mail=?, customer_phone=? WHERE id=" +id;
+
+        try {
+            PreparedStatement preparedStatement = DBConnector.getInstances().prepareStatement(query);
+            preparedStatement.setString(1, totalCustomer);
+            preparedStatement.setString(2, customerName);
+            preparedStatement.setString(3, customerId);
+            preparedStatement.setString(4, customerMail);
+            preparedStatement.setString(5, customerPhone);
+
+            Helper.showMsg("success");
+            return preparedStatement.executeUpdate() != -1;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean deleteReservation(String id){
+        {
+            String query = "DELETE FROM reservation WHERE id =" + id;
+
+            try {
+                PreparedStatement preparedStatement = DBConnector.getInstances().prepareStatement(query);
+                return preparedStatement.executeUpdate() != -1;
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, e, "Hata", JOptionPane.ERROR_MESSAGE);
+            }
+            return false;
         }
     }
 }

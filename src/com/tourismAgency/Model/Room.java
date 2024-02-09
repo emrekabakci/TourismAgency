@@ -3,6 +3,7 @@ package com.tourismAgency.Model;
 import com.tourismAgency.Helper.DBConnector;
 import com.tourismAgency.Helper.Helper;
 
+import javax.swing.*;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -199,6 +200,7 @@ public class Room {
             ResultSet resultSet = statement.executeQuery(query);
             obj = new Room();
             while (resultSet.next()) {
+                obj.setHotelID((resultSet.getInt("hotel_id")));
                 obj.setPensionType(resultSet.getString("pension_type"));
                 obj.setBedCapacity(resultSet.getInt("bed_capacity"));
                 obj.setM2(resultSet.getInt("m2"));
@@ -270,6 +272,55 @@ public class Room {
             preparedStatement.setBoolean(12, projection);
 
             Helper.showMsg("success");
+            return preparedStatement.executeUpdate() != -1;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean deleteRoom(String id){
+        {
+            String query = "DELETE FROM hotel_room WHERE id =" + id;
+
+            try {
+                PreparedStatement preparedStatement = DBConnector.getInstances().prepareStatement(query);
+                return preparedStatement.executeUpdate() != -1;
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, e, "Hata", JOptionPane.ERROR_MESSAGE);
+            }
+            return false;
+        }
+    }
+
+    public static boolean deleteRoomWithHotel(String hotelId){
+        {
+            String query = "DELETE FROM hotel_room WHERE hotel_id =" + hotelId;
+
+            try {
+                PreparedStatement preparedStatement = DBConnector.getInstances().prepareStatement(query);
+                return preparedStatement.executeUpdate() != -1;
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, e, "Hata", JOptionPane.ERROR_MESSAGE);
+            }
+            return false;
+        }
+    }
+
+    public static boolean increaseStock(String id) {
+
+        String query = "UPDATE hotel_room SET stock = stock + 1 WHERE id=" +id;
+        try {
+            PreparedStatement preparedStatement = DBConnector.getInstances().prepareStatement(query);
+            return preparedStatement.executeUpdate() != -1;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static boolean decreaseStock(String id) {
+
+        String query = "UPDATE hotel_room SET stock = stock - 1 WHERE id=" +id;
+        try {
+            PreparedStatement preparedStatement = DBConnector.getInstances().prepareStatement(query);
             return preparedStatement.executeUpdate() != -1;
         } catch (SQLException e) {
             throw new RuntimeException(e);
