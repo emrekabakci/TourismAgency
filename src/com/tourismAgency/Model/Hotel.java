@@ -178,6 +178,33 @@ public class Hotel {
         return hotelList;
     }
 
+    public static Hotel getHotel(String hotelID){
+        String query = "SELECT * FROM hotel WHERE id=" + hotelID;
+        Hotel obj;
+        try {
+            Statement statement = DBConnector.getInstances().createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+            obj = new Hotel();
+            while (resultSet.next()) {
+                obj.setName(resultSet.getString("name"));
+                obj.setAddress(resultSet.getString("address"));
+                obj.setStar(resultSet.getString("star"));
+                obj.setCarPark(resultSet.getBoolean("car_park"));
+                obj.setWifi(resultSet.getBoolean("wifi"));
+                obj.setPool(resultSet.getBoolean("pool"));
+                obj.setFitness(resultSet.getBoolean("fitness"));
+                obj.setConcierge(resultSet.getBoolean("concierge"));
+                obj.setSpa(resultSet.getBoolean("spa"));
+                obj.setRoomService(resultSet.getBoolean("room_service"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return obj;
+
+    }
+
+
     public static boolean addHotel(String name, String address, String mail, String phone, String star, boolean carPark,
                                   boolean wifi, boolean pool, boolean fitness, boolean concierge, boolean spa,
                                   boolean roomService) {

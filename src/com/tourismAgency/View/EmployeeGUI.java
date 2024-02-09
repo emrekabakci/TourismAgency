@@ -2,10 +2,7 @@ package com.tourismAgency.View;
 
 import com.tourismAgency.Helper.Config;
 import com.tourismAgency.Helper.Helper;
-import com.tourismAgency.Model.Hotel;
-import com.tourismAgency.Model.Pension;
-import com.tourismAgency.Model.Room;
-import com.tourismAgency.Model.Season;
+import com.tourismAgency.Model.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -14,21 +11,26 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import static com.tourismAgency.Model.Admin.getList;
 import static com.tourismAgency.Model.Hotel.deleteHotelByID;
 import static com.tourismAgency.Model.Hotel.getHotels;
 import static com.tourismAgency.Model.Pension.getPension;
-import static com.tourismAgency.Model.Room.getRooms;
-import static com.tourismAgency.Model.Room.getRoomsBySearch;
+import static com.tourismAgency.Model.Reservation.getReservations;
+import static com.tourismAgency.Model.Room.*;
 import static com.tourismAgency.Model.Season.getSeason;
+
 
 public class EmployeeGUI extends JFrame {
     private JPanel wrapper;
     private JTabbedPane tabbedPane1;
     private JPanel pnl_hotel;
     private JPanel Room;
-    private JPanel Reservation;
+    private JPanel pnl_reservation;
     private JTable tbl_hotel;
     private JTable tbl_pension;
     private JTable tbl_season;
@@ -40,8 +42,6 @@ public class EmployeeGUI extends JFrame {
     private JTextField fld_city;
     private JTextField fld_seasonStart;
     private JTextField fld_seasonFinish;
-    private JTextField fld_adult;
-    private JTextField fld_child;
     private JButton btn_search;
     private JButton btn_add;
     private JButton btn_reset;
@@ -52,12 +52,21 @@ public class EmployeeGUI extends JFrame {
     private JLabel lbl_child;
     private JLabel lbl_checkInDate;
     private JLabel lbl_CheckOutDate;
+    private JTextField fld_adult;
+    private JTextField fld_child;
+    private JTable tbl_reservation;
+    private JScrollPane scrl_reservation;
     private DefaultTableModel mdl_hotel_list;
     private DefaultTableModel mdl_pension_list;
     private DefaultTableModel mdl_season_list;
     private DefaultTableModel mdl_room_list;
+    private DefaultTableModel mdl_reservation_list;
     private JPopupMenu action_menu;
+    private JPopupMenu room_action_menu;
+    private JPopupMenu reservation_action_menu;
     private int selectedRow;
+    private int selectedRoomRow;
+    private int selectedReservationRow;
 
     public EmployeeGUI() {
         setContentPane(wrapper);
@@ -106,6 +115,16 @@ public class EmployeeGUI extends JFrame {
         tbl_room.setModel(mdl_room_list);
         tbl_room.getTableHeader().setReorderingAllowed(false);
 
+        mdl_reservation_list = new DefaultTableModel();
+        Object[] col_reservation_list = {"Id", "Oda Id", "Giriş Tarihi", "Çıkış Tarihi", "Toplam Tutar",
+                "Misafir Sayısı", "Misafir Adı", "Misafir Kimlik No", "Mail", "Telefon"};
+        mdl_reservation_list.setColumnIdentifiers(col_reservation_list);
+
+        reservationLoader(col_reservation_list);
+
+        tbl_reservation.setModel(mdl_reservation_list);
+        tbl_reservation.getTableHeader().setReorderingAllowed(false);
+
 
         btn_addHotel.addActionListener(new ActionListener() {
             @Override
@@ -127,6 +146,122 @@ public class EmployeeGUI extends JFrame {
             }
         });
 
+        tbl_room.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+
+                selectedRoomRow = tbl_room.getSelectedRow();
+
+            }
+        });
+
+        tbl_reservation.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+
+                selectedReservationRow = tbl_reservation.getSelectedRow();
+
+            }
+        });
+
+
+        room_action_menu = new JPopupMenu();
+        room_action_menu.add("Rezervasyon Oluştur").addActionListener(e -> {
+            if (!fld_adult.getText().trim().isEmpty() && !fld_child.getText().trim().isEmpty() &&
+                    !fld_seasonStart.getText().trim().isEmpty() && !fld_seasonFinish.getText().trim().isEmpty()) {
+                String firstDate = fld_seasonStart.getText();
+                String finishDate = fld_seasonFinish.getText();
+                Date date1;
+                Date date2;
+                Date date3;
+                Date date4;
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd");
+
+
+                try {
+                    date1 = formatter.parse(firstDate);
+                    date2 = formatter.parse(finishDate);
+                    date3 = formatter.parse(getCheckIn());
+                    date4 = formatter.parse(getCheckout());
+                } catch (ParseException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+                if (date1.getTime() >= date3.getTime() && date2.getTime() <= date4.getTime()) {
+                    long differenceInMillis = Math.abs(date2.getTime() - date1.getTime());
+                    long difference = TimeUnit.MILLISECONDS.toDays(differenceInMillis);
+                    int param1 = Integer.parseInt(fld_child.getText());
+                    int param2 = Integer.parseInt(fld_adult.getText());
+                    int totalCustomer = param1 + param2;
+                    int childPrice = Integer.parseInt(mdl_room_list.getValueAt(selectedRoomRow, 5).toString()) * param1;
+                    int adultPrice = Integer.parseInt(mdl_room_list.getValueAt(selectedRoomRow, 4).toString()) * param2;
+                    long result = (childPrice + adultPrice) * difference;
+                    ReservationGUI reservationGUI = new ReservationGUI(EmployeeGUI.this);
+                    reservationGUI.fld_hotelName.setText(mdl_room_list.getValueAt(selectedRoomRow, 1).toString());
+                    reservationGUI.roomId = mdl_room_list.getValueAt(selectedRoomRow, 0).toString();
+                    reservationGUI.fld_totalPrice.setText(String.valueOf(result));
+                    reservationGUI.fld_totalCustomer.setText(String.valueOf(totalCustomer));
+                    reservationGUI.fld_pensionType.setText(mdl_room_list.getValueAt(selectedRoomRow, 2).toString());
+                    reservationGUI.fld_seasonStart.setText(fld_seasonStart.getText());
+                    reservationGUI.fld_seasonFinish.setText(fld_seasonFinish.getText());
+                    reservationGUI.fld_bedCapacity.setText(mdl_room_list.getValueAt(selectedRoomRow, 6).toString());
+                    reservationGUI.fld_m2.setText(mdl_room_list.getValueAt(selectedRoomRow, 7).toString());
+                    if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 8).toString())) {
+                        reservationGUI.rBtn_tv.setSelected(true);
+                    }
+                    if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 9).toString())) {
+                        reservationGUI.rBtn_minibar.setSelected(true);
+                    }
+                    if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 10).toString())) {
+                        reservationGUI.rBtn_console.setSelected(true);
+                    }
+                    if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 11).toString())) {
+                        reservationGUI.rBtn_safe.setSelected(true);
+                    }
+                    if (Boolean.parseBoolean(mdl_room_list.getValueAt(selectedRoomRow, 12).toString())) {
+                        reservationGUI.rBtn_projection.setSelected(true);
+                    }
+                } else {
+                    Helper.showMsg("error");
+                }
+            } else {
+                Helper.showMsg("fill");
+            }
+        });
+
+        tbl_room.setComponentPopupMenu(room_action_menu);
+
+        reservation_action_menu = new JPopupMenu();
+        reservation_action_menu.add("Rezervasyon Güncelle").addActionListener(e -> {
+            ReservationGUI reservationGUI = new ReservationGUI(EmployeeGUI.this);
+            reservationGUI.fld_hotelName.setText(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString());
+
+            reservationGUI.fld_pensionType.setText(getRoom(mdl_reservation_list.
+                    getValueAt(selectedReservationRow,1).toString()).getPensionType());
+
+            reservationGUI.fld_bedCapacity.setText(getRoom(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString()).toString());
+
+            reservationGUI.fld_m2.setText(getRoom(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString()).toString());
+
+            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString()).isTelevision()){
+                reservationGUI.rBtn_tv.setSelected(true);
+            }
+            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString()).isMinibar()){
+                reservationGUI.rBtn_minibar.setSelected(true);
+            }
+            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString()).isConsole()){
+                reservationGUI.rBtn_console.setSelected(true);
+            }
+            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString()).isSafe()){
+                reservationGUI.rBtn_safe.setSelected(true);
+            }
+            if (getRoom(mdl_reservation_list.getValueAt(selectedReservationRow,1).toString()).isProjection()){
+                reservationGUI.rBtn_projection.setSelected(true);
+            }
+        });
+        tbl_reservation.setComponentPopupMenu(reservation_action_menu);
 
         action_menu = new JPopupMenu();
         action_menu.add("Hotel Sil").addActionListener(e -> {
@@ -220,8 +355,6 @@ public class EmployeeGUI extends JFrame {
     }
 
 
-
-
     public void hotelLoader(Object[] col_hotel_list) {
         mdl_hotel_list.setRowCount(0);
 
@@ -292,6 +425,25 @@ public class EmployeeGUI extends JFrame {
         }
     }
 
+    public void reservationLoader(Object[] col_reservation_list) {
+        mdl_reservation_list.setRowCount(0);
+
+        for (Reservation reservations : getReservations()) {
+            Object[] row = new Object[col_reservation_list.length];
+            row[0] = reservations.getId();
+            row[1] = reservations.getRoomId();
+            row[2] = reservations.getSeasonStart();
+            row[3] = reservations.getSeasonFinish();
+            row[4] = reservations.getTotalPrice();
+            row[5] = reservations.getTotalCustomer();
+            row[6] = reservations.getCustomerName();
+            row[7] = reservations.getCustomerId();
+            row[8] = reservations.getCustomerMail();
+            row[9] = reservations.getCustomerPhone();
+            mdl_reservation_list.addRow(row);
+        }
+    }
+
     public void roomLoaderForSearch(Object[] col_room_list, String name, String city) {
         mdl_room_list.setRowCount(0);
 
@@ -312,6 +464,26 @@ public class EmployeeGUI extends JFrame {
             row[12] = rooms.isProjection();
             mdl_room_list.addRow(row);
         }
+    }
+
+    private String getCheckIn() {
+        String checkIn = null;
+        for (Season seasons : getSeason(mdl_room_list.getValueAt(selectedRoomRow, 1).toString())) {
+
+            checkIn = seasons.getSeason();
+
+        }
+        return checkIn;
+    }
+
+    private String getCheckout() {
+        String checkOut = null;
+        for (Season seasons : getSeason(mdl_room_list.getValueAt(selectedRoomRow, 1).toString())) {
+
+            checkOut = seasons.getSeasonFinish();
+
+        }
+        return checkOut;
     }
 
 }

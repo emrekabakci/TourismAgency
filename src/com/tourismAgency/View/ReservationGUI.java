@@ -5,6 +5,14 @@ import com.tourismAgency.Helper.Helper;
 
 import javax.swing.*;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import static com.tourismAgency.Model.Hotel.getHotel;
+import static com.tourismAgency.Model.Reservation.addReservation;
+
 public class ReservationGUI extends JFrame {
     private JPanel wrapper;
     public JTextField fld_hotelName;
@@ -35,10 +43,11 @@ public class ReservationGUI extends JFrame {
     private JTextField fld_customerName;
     private JTextField fld_customerID;
     private JTextField fld_customerMail;
-    private JTextField fld_customerNo;
+    private JTextField fld_customerPhone;
     private JButton btn_saveReservation;
+    public String roomId;
 
-    public ReservationGUI(){
+    public ReservationGUI(EmployeeGUI employeeGUI) {
 
         setContentPane(wrapper);
         setSize(900, 600);
@@ -46,5 +55,51 @@ public class ReservationGUI extends JFrame {
         setVisible(true);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocation(Helper.setCenter("x", getSize()), Helper.setCenter("y", getSize()));
+
+        Object[] col_reservation_list = {"Id","Oda Id", "Giriş Tarihi", "Çıkış Tarihi", "Toplam Tutar",
+                "Misafir Sayısı", "Misafir Adı", "Misafir Kimlik No" ,"Mail", "Telefon"};
+
+        Timer timer = new Timer();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                fld_city.setText(getHotel(fld_hotelName.getText()).getAddress());
+                fld_star.setText(getHotel(fld_hotelName.getText()).getStar());
+                if (getHotel(fld_hotelName.getText()).isCarPark()) {
+                    rBtn_otopark.setSelected(true);
+                }
+                if (getHotel(fld_hotelName.getText()).isWifi()) {
+                    rBtn_wifi.setSelected(true);
+                }
+                if (getHotel(fld_hotelName.getText()).isPool()) {
+                    rBtn_pool.setSelected(true);
+                }
+                if (getHotel(fld_hotelName.getText()).isFitness()) {
+                    rBtn_fitness.setSelected(true);
+                }
+                if (getHotel(fld_hotelName.getText()).isConcierge()) {
+                    rBtn_concierge.setSelected(true);
+                }
+                if (getHotel(fld_hotelName.getText()).isSpa()) {
+                    rBtn_spa.setSelected(true);
+                }
+                if (getHotel(fld_hotelName.getText()).isRoomService()) {
+                    rBtn_roomService.setSelected(true);
+                }
+            }
+        };
+        timer.schedule(task,100);
+        btn_saveReservation.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                addReservation(roomId,fld_seasonStart.getText(),fld_seasonFinish.getText(),fld_totalPrice.getText(),
+                        fld_totalCustomer.getText(),fld_customerName.getText(),fld_customerID.getText(),
+                        fld_customerMail.getText(), fld_customerPhone.getText());
+                employeeGUI.reservationLoader(col_reservation_list);
+                ReservationGUI.super.dispose();
+            }
+        });
     }
 }
+
+

@@ -191,6 +191,30 @@ public class Room {
         return roomList;
     }
 
+    public static Room getRoom(String roomID){
+        String query = "SELECT * FROM hotel_room WHERE id=" + roomID;
+        Room obj;
+        try {
+            Statement statement = DBConnector.getInstances().createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+            obj = new Room();
+            while (resultSet.next()) {
+                obj.setPensionType(resultSet.getString("pension_type"));
+                obj.setBedCapacity(resultSet.getInt("bed_capacity"));
+                obj.setM2(resultSet.getInt("m2"));
+                obj.setTelevision(resultSet.getBoolean("television"));
+                obj.setMinibar(resultSet.getBoolean("minibar"));
+                obj.setConsole(resultSet.getBoolean("console"));
+                obj.setSafe(resultSet.getBoolean("safe"));
+                obj.setProjection(resultSet.getBoolean("projection"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return obj;
+
+    }
+
     public static ArrayList<Room> getRoomsBySearch(String name, String city) {
         ArrayList<Room> roomList = new ArrayList<>();
 
