@@ -1,4 +1,4 @@
-# Araç Kiralama Sistemi
+# Turizm Acente Uygulaması
 Bu projenin temel amacı, otel sektöründe faaliyet gösteren işletmenin günlük operasyonlarını daha etkili bir şekilde yönetmesini sağlamak ve müşteri rezervasyon süreçlerini optimize etmektir. 
 
 ## Kullanıılan Teknolojiler
